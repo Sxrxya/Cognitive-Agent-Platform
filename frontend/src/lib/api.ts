@@ -1,5 +1,5 @@
 /**
- * Cognitive Agent Platform — API Service Layer
+ * Cognitive Agent Platform — API Service Layer (Production)
  * All backend API calls go through here.
  */
 
@@ -36,7 +36,10 @@ export const chatApi = {
     send: (body: ChatRequest) =>
         request<ChatResponse>("/api/chat/", { method: "POST", body: JSON.stringify(body) }),
     history: (id: string) =>
-        request<{ messages: unknown[] }>(`/api/chat/history/${id}`),
+        request<{ conversation_id: string; messages: { id: string; text: string; score: number; metadata: Record<string, unknown> }[] }>(
+            `/api/chat/history/${id}`
+        ),
+    streamUrl: `${API_BASE}/api/chat/stream`,
 };
 
 /* ─── Agents ───────────────────────────────────────────── */
@@ -103,6 +106,17 @@ export const documentsApi = {
         form.append("file", file);
         return fetch(`${API_BASE}/api/documents/upload`, { method: "POST", body: form }).then((r) => r.json());
     },
+    ingestText: (text: string, title = "Untitled") =>
+        request<{ document_id: string; chunks_created: number; message: string }>("/api/documents/ingest-text", {
+            method: "POST",
+            body: JSON.stringify(text),
+            headers: { "Content-Type": "application/json" },
+        }),
+    summarize: (text: string) =>
+        request<{ document_id: string; summary: string; key_topics: string[] }>("/api/documents/summarize", {
+            method: "POST",
+            body: JSON.stringify(text),
+        }),
     ask: (question: string) =>
         request<{ answer: string; sources: string[]; context_chunks: number }>("/api/documents/ask", {
             method: "POST",
@@ -110,7 +124,20 @@ export const documentsApi = {
         }),
 };
 
-/* ─── Health ───────────────────────────────────────────── */
-export const healthApi = {
-    check: () => request<{ status: string; timestamp: string }>("/health"),
+/* ─── System ───────────────────────────────────────────── */
+export interface ServiceStatus {
+    status: string;
+    provider?: string;
+    model?: string;
+    dimension?: number;
+    total_vectors?: number;
+    namespaces?: Record<string, unknown>;
+    error?: string;
+}
+
+export const systemApi = {
+    health: () =>
+        request<{ status: string; app: string; version: string; services: Record<string, unknown> }>("/health"),
+    status: () =>
+        request<{ services: Record<string, ServiceStatus> }>("/api/status"),
 };

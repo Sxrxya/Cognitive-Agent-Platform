@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import Sidebar from "@/components/Sidebar";
+import { ToastProvider } from "@/components/Toast";
+import CommandPalette from "@/components/CommandPalette";
 
 export const metadata: Metadata = {
   title: "CAP — Cognitive Agent Platform",
-  description: "Autonomous AI platform combining NLP, agentic reasoning, and memory-augmented intelligence.",
+  description: "Autonomous AI platform combining NLP, agentic reasoning, and persistent memory.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -16,11 +18,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           rel="stylesheet"
         />
       </head>
-      <body className="gradient-bg" style={{ display: "flex", minHeight: "100vh" }}>
-        <Sidebar />
-        <main style={{ flex: 1, overflowY: "auto", padding: "24px" }}>
-          {children}
-        </main>
+      <body className="gradient-bg">
+        <ToastProvider>
+          <CommandPalette />
+          <div style={{ display: "flex", minHeight: "100vh" }}>
+            <Sidebar />
+            <main style={{ flex: 1, padding: "24px 32px", overflow: "auto" }}>{children}</main>
+          </div>
+        </ToastProvider>
       </body>
     </html>
   );
