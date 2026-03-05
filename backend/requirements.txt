@@ -1,4 +1,6 @@
 # Cognitive Agent Platform — Backend Dependencies
+
+# FastAPI
 fastapi==0.115.6
 uvicorn[standard]==0.34.0
 pydantic==2.10.4
@@ -9,9 +11,11 @@ python-multipart==0.0.20
 # AI / LLM
 google-generativeai==0.8.4
 huggingface-hub==0.27.1
-openai==1.59.7
 
-# Vector Database
+# Embeddings (FREE — runs locally)
+sentence-transformers==3.3.1
+
+# Vector Database (FREE tier)
 pinecone-client==5.0.1
 
 # Agent Orchestration
@@ -20,16 +24,22 @@ langchain-google-genai==2.0.8
 langchain-community==0.3.14
 langgraph==0.2.62
 
-# NLP & Data
-tiktoken==0.8.0
-beautifulsoup4==4.12.3
-httpx==0.28.1
-aiofiles==24.1.0
+# Databases (SQLite default, Postgres optional)
+sqlalchemy==2.0.29
+alembic==1.13.1
+aiosqlite==0.20.0
+
+# Search (FREE — no API key needed)
+duckduckgo-search==7.5.3
 
 # Document Processing
 pypdf==5.1.0
 python-docx==1.1.2
-markdown==3.7
+beautifulsoup4==4.12.3
+httpx==0.28.1
+
+# NLP
+tiktoken==0.8.0
 
 # Utilities
 tenacity==9.0.0

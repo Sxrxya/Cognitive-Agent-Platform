@@ -1,37 +1,36 @@
 """
-Cognitive Agent Platform — Embedding Service
-Generates vector embeddings using OpenAI text-embedding-3-large.
+Cognitive Agent Platform — Embedding Service (FREE)
+Uses sentence-transformers locally — no API key, no cost.
+Model: all-MiniLM-L6-v2 (384 dims, fast, accurate)
 """
 
 import structlog
-from openai import OpenAI
-from tenacity import retry, stop_after_attempt, wait_exponential
-from config import get_settings
+from sentence_transformers import SentenceTransformer
 
 logger = structlog.get_logger(__name__)
 
+# Lightweight model — runs locally, free, 384 dimensions
+DEFAULT_MODEL = "all-MiniLM-L6-v2"
+EMBEDDING_DIMENSION = 384
+
 
 class EmbeddingService:
-    """Handles all embedding generation via OpenAI."""
+    """Generates embeddings using local sentence-transformers (100% free)."""
 
-    def __init__(self):
-        settings = get_settings()
-        self.client = OpenAI(api_key=settings.openai_api_key)
-        self.model = settings.embedding_model
-        self.dimension = settings.embedding_dimension
-        logger.info("EmbeddingService initialized", model=self.model, dim=self.dimension)
+    def __init__(self, model_name: str = DEFAULT_MODEL):
+        logger.info("Loading embedding model locally...", model=model_name)
+        self.model = SentenceTransformer(model_name)
+        self.dimension = EMBEDDING_DIMENSION
+        logger.info("EmbeddingService ready (FREE — local)", model=model_name, dim=self.dimension)
 
-    @retry(stop=stop_after_attempt(3), wait=wait_exponential(min=1, max=10))
     def embed_text(self, text: str) -> list[float]:
         """Generate embedding for a single text string."""
-        response = self.client.embeddings.create(model=self.model, input=text)
-        return response.data[0].embedding
+        return self.model.encode(text, normalize_embeddings=True).tolist()
 
-    @retry(stop=stop_after_attempt(3), wait=wait_exponential(min=1, max=10))
     def embed_batch(self, texts: list[str]) -> list[list[float]]:
-        """Generate embeddings for multiple texts in one API call."""
-        response = self.client.embeddings.create(model=self.model, input=texts)
-        return [item.embedding for item in response.data]
+        """Generate embeddings for multiple texts in one call."""
+        embeddings = self.model.encode(texts, normalize_embeddings=True, batch_size=32)
+        return [emb.tolist() for emb in embeddings]
 
 
 # Singleton
@@ -46,5 +45,5 @@ def get_embedding_service() -> EmbeddingService:
 
 
 def get_embedding(text: str) -> list[float]:
-    """Convenience function for quick embedding."""
+    """Convenience function."""
     return get_embedding_service().embed_text(text)

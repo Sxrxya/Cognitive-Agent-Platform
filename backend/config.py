@@ -24,16 +24,36 @@ class Settings(BaseSettings):
     # --- LLM: Fallback (HuggingFace) ---
     huggingface_api_key: str = Field(..., description="HuggingFace API key")
 
-    # --- Embeddings (OpenAI) ---
-    openai_api_key: str = Field(..., description="OpenAI API key for embeddings")
-    embedding_model: str = "text-embedding-3-large"
-    embedding_dimension: int = 3072
+    # --- Embeddings (FREE — local sentence-transformers) ---
+    openai_api_key: str = ""  # Optional, only needed if using OpenAI embeddings
+    embedding_model: str = "all-MiniLM-L6-v2"
+    embedding_dimension: int = 384
 
     # --- Vector DB (Pinecone) ---
     pinecone_api_key: str = Field(..., description="Pinecone API key")
-    pinecone_index: str = "cap-memory"
+    pinecone_index: str = "cognitive"
+    pinecone_host: str = ""
     pinecone_cloud: str = "aws"
     pinecone_region: str = "us-east-1"
+
+    # --- Embeddings: Cohere (Multilingual Fallback) ---
+    cohere_api_key: str = ""
+
+    # --- Search ---
+    serpapi_key: str = ""
+
+    # --- Browser Automation ---
+    browserless_key: str = ""
+
+    # --- Google APIs ---
+    google_credentials: str = ""
+
+    # --- Notion ---
+    notion_api_key: str = ""
+
+    # --- Databases ---
+    database_url: str = "sqlite:///./cap_local.db"
+    redis_url: str = "redis://localhost:6379/0"
 
     # --- Backend Server ---
     backend_host: str = "0.0.0.0"

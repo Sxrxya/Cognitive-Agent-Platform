@@ -24,7 +24,11 @@ class MemoryService:
     def __init__(self):
         settings = get_settings()
         self.pc = Pinecone(api_key=settings.pinecone_api_key)
-        self.index = self.pc.Index(settings.pinecone_index)
+        # Use host URL for direct connection if available
+        if settings.pinecone_host:
+            self.index = self.pc.Index(settings.pinecone_index, host=settings.pinecone_host)
+        else:
+            self.index = self.pc.Index(settings.pinecone_index)
         self.embedder = get_embedding_service()
         logger.info("MemoryService initialized", index=settings.pinecone_index)
 

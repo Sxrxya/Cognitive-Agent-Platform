@@ -1,6 +1,7 @@
 """
 Cognitive Agent Platform — LLM Service
-Primary: Google Gemini  |  Fallback: HuggingFace Inference
+Primary: Google Gemini (FREE tier)  |  Fallback: HuggingFace (FREE)
+Both providers are 100% free.
 """
 
 import structlog
@@ -13,31 +14,31 @@ logger = structlog.get_logger(__name__)
 
 
 class LLMService:
-    """Unified LLM interface with automatic fallback."""
+    """Unified LLM interface — both providers are free."""
 
     def __init__(self):
         settings = get_settings()
 
-        # Primary: Gemini
+        # Primary: Gemini (FREE — 15 RPM, 1M tokens/day)
         genai.configure(api_key=settings.gemini_api_key)
         self.gemini_model = genai.GenerativeModel(settings.gemini_model)
         self.gemini_model_name = settings.gemini_model
 
-        # Fallback: HuggingFace
+        # Fallback: HuggingFace (FREE inference API)
         self.hf_client = InferenceClient(token=settings.huggingface_api_key)
 
-        logger.info("LLMService initialized", primary=settings.gemini_model, fallback="HuggingFace")
+        logger.info("LLMService initialized (both FREE)", primary=settings.gemini_model, fallback="HuggingFace")
 
     @retry(stop=stop_after_attempt(2), wait=wait_exponential(min=1, max=5))
     def _call_gemini(self, prompt: str, system_instruction: str = "") -> str:
-        """Call Gemini API."""
+        """Call Gemini API (FREE tier)."""
         full_prompt = f"{system_instruction}\n\n{prompt}" if system_instruction else prompt
         response = self.gemini_model.generate_content(full_prompt)
         return response.text
 
     @retry(stop=stop_after_attempt(2), wait=wait_exponential(min=1, max=5))
     def _call_huggingface(self, prompt: str, system_instruction: str = "") -> str:
-        """Call HuggingFace Inference API as fallback."""
+        """Call HuggingFace Inference API (FREE)."""
         messages = []
         if system_instruction:
             messages.append({"role": "system", "content": system_instruction})
@@ -54,20 +55,20 @@ class LLMService:
         """Generate response using primary LLM, falling back if needed."""
         try:
             result = self._call_gemini(prompt, system_instruction)
-            logger.info("LLM response generated", provider="gemini")
+            logger.info("LLM response generated", provider="gemini", cost="$0")
             return result
         except Exception as e:
             logger.warning("Gemini failed, falling back to HuggingFace", error=str(e))
             try:
                 result = self._call_huggingface(prompt, system_instruction)
-                logger.info("LLM response generated", provider="huggingface")
+                logger.info("LLM response generated", provider="huggingface", cost="$0")
                 return result
             except Exception as e2:
                 logger.error("Both LLM providers failed", gemini_error=str(e), hf_error=str(e2))
                 raise RuntimeError(f"All LLM providers failed: Gemini={e}, HF={e2}")
 
     async def generate_async(self, prompt: str, system_instruction: str = "") -> str:
-        """Async wrapper (runs sync in thread for now)."""
+        """Async wrapper."""
         import asyncio
         return await asyncio.to_thread(self.generate, prompt, system_instruction)
 
